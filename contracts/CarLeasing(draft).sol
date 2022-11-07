@@ -63,13 +63,13 @@ contract CarLeasing{
     }
     //check if it is time to pay
     modifier isThreeMonthsFromLastPayment(uint _index) {
-            uint time = Car_by_No[_index].timestamp + 30 days;
+            uint time = Car_by_No[_index].timestamp + 90 days;
             require(now >= time, "Less than 3 months from the last payment");
             _;
     }
     //check if it is 3 months from the last time payment
     modifier isPaymentTime(uint _index) {
-            uint time = Car_by_No[_index].timestamp + 90 days;
+            uint time = Car_by_No[_index].timestamp + 30 days;
             require(now >= time, "Time left to pay leasing");
             _;
     }

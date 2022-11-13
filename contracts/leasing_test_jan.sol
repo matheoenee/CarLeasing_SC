@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+    //import nft-contract and openzeppelin counters
     import "./CarNFT.sol";
     import "@openzeppelin/contracts/utils/Counters.sol";
 
     contract Lease {
         //uint private lease_id;
-        address payable tenant; // this needs to be the nft owner (and contract owner)
-        address payable owner;
-        address payable seller;
+        address payable tenant; // person leasing a car
+        address payable owner; // owner of company (or admin)
+        address payable seller;  // person leasing out the car
         
-        using Counters for Counters.Counter;
+        using Counters for Counters.Counter; // for ids that can increment on function call
 
-        Counters.Counter private _tenant_id_counter;
+        Counters.Counter private _tenant_id_counter; // tenant id for each added user
 
         // Each car is a struct, and will be implemented as an NFT
         struct Car {
@@ -29,15 +30,17 @@ pragma solidity ^0.8.9;
         // Create a mapping of all the cars, licence_num => Car
         mapping(string => Car) public cars;
 
-        // Struct of users??
+        // Struct of users
         struct Tenant {
             uint tenant_id;
             address payable tenant_address;
+            uint driver_experience; //number from 1 to ..?
         }
 
         // Mapping of users, uid => User
         mapping(uint => Tenant) private tenants;
 
+        //struct for leases
         struct LeasingContract{
             uint license_num;
             uint contract_id;
@@ -49,9 +52,11 @@ pragma solidity ^0.8.9;
             address payable owner_address;
             address payable seller_address;
         }
-    
+
+        //mapping for leasing contracts, contract-id => Contract
         mapping(uint => LeasingContract) public LeasingContract_by_No;
 
+        // struct for payments
         struct LeasingPayment{
             uint payment_id;
             uint license_num;
@@ -61,10 +66,11 @@ pragma solidity ^0.8.9;
             address payable tenant_address;
             address payable owner_address;
         }
-    
+
+        //mapping for payments, payment-id => Payment
         mapping(uint => LeasingPayment) public LeasingPayment_by_No;
 
-        //map nft-id to nft link
+        //map nft-id to nft link, id => ipfs-link
         mapping(uint => string) private nfts;
 
         //map of requested cars, uid => licence_num
@@ -73,6 +79,7 @@ pragma solidity ^0.8.9;
         // A function to add a car to the cars mapping
         // an ipfs-url will also be linked to nft-id
         // this requires the nft to be minted first (safeMint function call)
+        // Caveat: json-structure of car not connected to car-structure (double data entry)
         function addCar (
             string memory _license_num,
             string memory _model,

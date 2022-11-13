@@ -3,10 +3,11 @@ pragma solidity ^0.8.9;
 
 //import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract CarNFT is ERC721URIStorage, Ownable {
+contract CarNFT is IERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
@@ -20,5 +21,9 @@ contract CarNFT is ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, _ipfs_link);
 
         return tokenId;
+    }
+
+    function transferTokenTo(address _from, address _to, uint256 _token_id) public onlyOwner {
+        _transferFrom(_from, _to, _tokenId);
     }
 }

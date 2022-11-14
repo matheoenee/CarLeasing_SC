@@ -1,121 +1,224 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
 
-    contract Lease {
-        //uint private lease_id;
-        address payable public seller;
-        address payable public buyer;
-        enum State { Created, Locked, Inactive }
+    //import nft-contract and openzeppelin counters
+    import "./CarNFT.sol";
+    import "@openzeppelin/contracts/utils/Counters.sol";
+    import "@openzeppelin/contracts/access/AccessControl.sol";
+    import "@openzeppelin/contracts/utils/Counter.sol";
+
+    contract BilBoyd {
+        bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+        bytes32 public constant SELLER_ROLE = keccak256("EMPLOYEE_ROLE");
+        bytes32 public constant SELLER_ROLE = keccak256("CUSTOMER_ROLE");
+
+        //address payable employyee;
+        //address payable customer;
+        address payable owner; // owner of company (or admin)
+        
+        using Counters for Counters.Counter; // for ids that can increment on function call
+
+        Counters.Counter private _customer_id_counter; // tenant id for each added user
+
+        Counters.Counter private _agreement_id_counter; // id for each new contract
+
+        Counters.Counter private _payment_id_counter; // id for each new payment
+        
+        Counters.Counter private _proposition_id_counter; // id for each new payment
+
+        uint256 durations[5] = [24, 36, 48, 54, 64, 72]; // Lease duration from 2 to 5 years
+        uint256 mileageCaps[4] = [10000, 12000, 15000, 18000, 20000]; // Mileage caps per year
+    
+        uint256 LIFE_MILEAGE = 200000;
 
         // Each car is a struct, and will be implemented as an NFT
         struct Car {
-            uint private licenseNum;
+            string license_num;
             string model;
             string color;
-            uint prodYear;
-            uint retailValue;
+            uint256 matriculation_year;
+            uint256 retail_value;
+            uint256 nft_id;
+            address payable nft_owner;
+            uint256 current_tenant_id;
+            bool available;
         }
-
-        // Struct of users??
-
-        struc private User {
-            uint uid;
-            string username;
-            address addr;
-        }
-
-        // Create a mapping of all the cars
-        mapping(uint => Car) public cars;
         
-        // Mapping of users??
-        mapping(uint => User) private users;
+        // Create a mapping of all the cars, license_num => Car
+        mapping(string => Car) public cars;
 
-        // A function to add a car to the cars mapping
-        function addCar(
-            uint  memory private _licenseNum,
-            string memory _model,
-            string memory _color,
-            uint memory _prodYear,
-            uint memory _retailValue
-        ) public {
-            cars[_licenseNum] = Car(_model, _color, _prodYear, _retailValue); 
+        // Struct of users
+        struct Customer {
+            uint256 customer_id;
+            address payable tenant_address;
+            uint256 driver_experience;
         }
 
-        //Function for adding users??
-        function addUser(
-            uint memory private _uid,
-            string memory _username,
-            address memory private _addr
-        ) private {
-            users[_uid] = User(_uid, _username, _addr);
+        // Mapping of users, uid => Tenant
+        mapping(uint => Customer) private customers;
+
+        //struct for leases
+        struct LeasingContract{
+            string license_num;
+            uint256 contract_id;
+            uint256 customer_id;
+            uint256 monthly_quota;
+            uint256 deposit;
+            uint256 contract_start_date;
+            uint256 contract_end_date;
+            uint256 next_rent_date;
+            uint256 lease_duration_index;
+            address payable employee_address; //employee
+            string contract_status; // termiate, buy, cancel (only company), active
         }
 
+        //mapping for leasing contracts, contract-id => Contract
+        mapping(uint256 => LeasingContract) public leasing_contracts;
 
-        /* We build an enum State which consists of 3 possible values for the state of the contract . 
-        Every state variable has a default value of the first member ,‘ State .created ‘ State public state ; */
-
-        /* We require that the variable " value " in msg is an even number . 
-        Division will truncate if it is an odd number .*/
-        constructor() public payable {
-            seller = msg.sender;
-            value = msg.value / 2;
-            require ((2 * value) == msg.value, " Value has to be even.");
+        LeasingProposition{
+            uint256 proposition_id;
+            string license_num;
+            uint256 duration_index;
+            uint256 customer_id;
+            uint256 mileage_cap_index;
         }
 
-        modifier condition(bool _condition) {
-            require(_condition);
-            _;
-        }
-        // Define a modifier for a function that only the buyer can call
-        modifier onlyBuyer() {
-            require (msg.sender == buyer, "Only buyer can call this.");
-            _;
-        }
-        // Define a modifier for a function that only the seller can call
-        modifier onlySeller() {
-            require (msg.sender == seller, "Only seller can call this.");
-            _;
-        }
+        mapping(uint256 => LeasingProposition) leasing_propositions;
 
-        modifier inState(State _state) {
-            require (state == _state, " Invalid state.");
-            _;
+        //map nft-id to nft link, id => ipfs-link
+        mapping(uint256 => string) private nfts;
+        
+        //----------------------------------ADMIN----------------------------------------
+
+        /*
+            Documentation here
+        */
+        function addEmployee(address payable _employee_address) public onlyRole(DEFAULT_ADMIN_ROLE) {
+            
         }
 
-    event Aborted();
-    event PurchaseConfirmed();
-    event ItemReceived();
+        /*
+            Documentation here
+        */
+        function deleteEmployee(uint256 _employee_id) public onlyRole(DEFAULT_ADMIN_ROLE) {
 
-    /* Define a function to abort the purchase and reclaim the ether .
-    This function can only be called by the seller before the
-    contract is locked .*/
-    function abort() public onlySeller inState(State.Created) {
-        emit Aborted();
-        state = State.Inactive;
-        seller.transfer(address(this).balance);
-    }
+        }
 
-    /* Define a function that allows the buyer to confirm the
-    purchase .
-    52 Transaction has to include ‘2 * value ‘ ether .
-    53 The amount of ether will be locked until the function
-    confirmReceived is called .*/
-    function confirmPurchase() public inState(State.Created) condition(msg.value == (2 * value)) payable {
-        emit PurchaseConfirmed();
-        buyer = msg.sender;
-        state = State.Locked;
-    }
+        //----------------------------------SELLER----------------------------------------
 
-    /* Define a function that allows the buyer to confirm that he
-    received the item.
-    This will release the locked amount of ether . */
-    function confirmReceived() public onlyBuyer inState(State.Locked) {
-        emit ItemReceived();
-        /* It is essential to change the state first because otherwise ,
-        the contracts called using ‘send ‘ below can call in again here.*/
-        state = State.Inactive ;
-        /* NOTE: This actually allows both the buyer and the seller to
-        block the refund - the withdraw pattern should be used. */
-        buyer.transfer(value);
-        seller.transfer(address(this).balance);
-    }
+
+        /*
+            Documentation here
+        */
+        function addCustomer(address payable _customer_address, uint256 _driver_exp) public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function deleteCustomer(uint256 _customer_id) public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            JAN
+        */
+        function createCar() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            JAN
+        */
+        function removeCar() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function acceptLeasingProposition() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function rejectLeasingProposition() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function cancelAgreement() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            JARA
+        */
+        function setCarMileage() public onlyRole(SELLER_ROLE) {
+
+        }
+
+        //----------------------------------CUSTOMER----------------------------------------
+
+        /*
+            Documentation here
+        */
+        function makeLeaseProposition() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function cancelLeaseProposition() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+        */
+        function payRent() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            ELENA
+        */
+        function terminateLease() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            ELENA
+        */
+        function makeCarPurchaseProposition() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        /*
+            Documentation here
+            ELENA
+        */
+        function extendLease() public onlyRole(CUSTOMER_ROLE) {
+
+        }
+
+        //----------------------------------MODIFIERS AND HELPERS----------------------------------------
+
+        /*
+        MATHEO
+        */
+        function calculateMonthlyquota() private {
+
+        }
 }

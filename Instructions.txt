@@ -34,7 +34,9 @@ First, let explain what each role can do :
 
     4) REMOVE CUSTOMER 
         Parameter(s): address
-        Condition(s): This address should correspond to a customer
+        Condition(s): 
+            This address should correspond to a customer
+            Customer is not involved in an ongoing agreement
 
         Delete the customer in the SC
         Revoke CUSTOMER_ROLE
@@ -110,6 +112,7 @@ First, let explain what each role can do :
         Transfer the NFT to the customer
         ($) Transfer the amount to the OWNER's address
         Delete the leasing proposition
+        Delete car from mapping
     
     6) REJECT BUYING PROPOSITION
         Parameter(s): buyingPropositionId
@@ -140,8 +143,6 @@ First, let explain what each role can do :
 
         ($) Refund the customer (deposit + first month)
         Delete the proposition
-
-    3) CANCEL AGREEMENT ???
 
     4) PAY RENT
         Parameter(s): agreementId, mileage
@@ -181,5 +182,4 @@ First, let explain what each role can do :
         ($) Lock the amount in the SC's address
 
     7) EXTEND LEASE
-
     

@@ -17,13 +17,13 @@ contract CarNFT is IERC721, ERC721URIStorage, Ownable {
     function safeMint(address _to, string memory _ipfs_link) public onlyOwner returns (uint256){
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        _safeMint(_to, tokenId);
+        _safeMint(_to, tokenId); // should be msg.sender
         _setTokenURI(tokenId, _ipfs_link);
 
         return tokenId;
     }
 
     function transferTokenTo(address _from, address _to, uint256 _token_id) public onlyOwner {
-        _transferFrom(_from, _to, _tokenId);
+        _transfer(_from, _to, _token_id);
     }
 }

@@ -1,0 +1,25 @@
+The rent price depends on the initial price of the car, mileage, tenant's driving experience and the duration of the contract.
+
+Initial monthly rent value is 2% of the car market price.
+
+Final monthly rent value is calculated is follows: initial_price * 0,02 * driving_experience_coefficient * contract_length_coefficient * mileage_coefficient
+
+Coefficients list:
+
+Driving experience:	
+less than 5:	1
+5-10: 0,9
+10-15: 0,8
+more than 15: 0,7
+
+Mileage:
+7000: 1
+14000: 0,9
+21000:	0,8
+28000:	0,7
+
+Contract length:
+12: 1
+24: 0,9
+36: 0,8
+48: 0,7

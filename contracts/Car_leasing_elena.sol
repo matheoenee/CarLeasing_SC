@@ -168,41 +168,14 @@ modifier AgreementNotExpired(uint _index) {
     function signAgreement(uint _index) public payable notLandLord(_index) enoughAgreementfee(_index) OnlyWhileVacant(_index) {
         //lock money
         //wait until seller signs too
-        //if rejected, send money back
-        require(msg.sender != address(0));
-        address payable _landlord = Room_by_No[_index].landlord;
-        uint totalfee = Room_by_No[_index].rent_per_month + Room_by_No[_index].securityDeposit;
-        _landlord.transfer(totalfee);
-        no_of_agreement++;
-
-        Room_by_No[_index].currentTenant = msg.sender;
-        Room_by_No[_index].vacant = false;
-        Room_by_No[_index].timestamp = block.timestamp;
-        Room_by_No[_index].agreementid = no_of_agreement;
-        RoomAgreement_by_No[no_of_agreement]=RoomAgreement(_index,no_of_agreement,Room_by_No[_index].roomname,Room_by_No[_index].roomaddress,Room_by_No[_index].rent_per_month,Room_by_No[_index].securityDeposit,365 days,block.timestamp,msg.sender,_landlord);
-        no_of_rent++;
-        Rent_by_No[no_of_rent] = Rent(no_of_rent,_index,no_of_agreement,Room_by_No[_index].roomname,Room_by_No[_index].roomaddress,Room_by_No[_index].rent_per_month,now,msg.sender,_landlord);
-        
+        //if rejected, send money back  
     }
 
     function completeContractSigning(uint _index) public payable isSignedBySeller(_index) {
         //lock money
         //wait until seller signs too
         //if rejected, send money back
-        require(msg.sender != address(0));
-        address payable owner = LeasingContract[_index].ownerAddress;
-        uint totalfee = Room_by_No[_index].rent_per_month + Room_by_No[_index].securityDeposit;
-        _landlord.transfer(totalfee);
-        no_of_agreement++;
 
-        Room_by_No[_index].currentTenant = msg.sender;
-        Room_by_No[_index].vacant = false;
-        Room_by_No[_index].timestamp = block.timestamp;
-        Room_by_No[_index].agreementid = no_of_agreement;
-        RoomAgreement_by_No[no_of_agreement]=RoomAgreement(_index,no_of_agreement,Room_by_No[_index].roomname,Room_by_No[_index].roomaddress,Room_by_No[_index].rent_per_month,Room_by_No[_index].securityDeposit,365 days,block.timestamp,msg.sender,_landlord);
-        no_of_rent++;
-        Rent_by_No[no_of_rent] = Rent(no_of_rent,_index,no_of_agreement,Room_by_No[_index].roomname,Room_by_No[_index].roomaddress,Room_by_No[_index].rent_per_month,now,msg.sender,_landlord);
-        
     }
 
 

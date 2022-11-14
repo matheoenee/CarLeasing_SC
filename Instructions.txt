@@ -1,0 +1,185 @@
+The contract will established 4 roles :
+    - DEFAULT_ADMIN_ROLE (owner, i.e. the company)
+    - MINTER_ROLE (owner, i.e. the company)
+    - EMPLOYEE_ROLE (employees)
+    - CUSTOMER_ROLE (customers)
+
+First, let explain what each role can do : 
+
+/* ---------------------------------------------
+                DEFAULT_ADMIN_ROLE
+ -------------------------------------------- */
+    1) ADD EMPLOYEE
+        Parameter(s): address
+        Condition(s): None
+
+        Grant EMPLOYEE_ROLE
+        Give APPROVAL to transfer OWNER's NFTs
+
+    2) DELETE EMPLOYEE
+        Parameter(s): address
+        Condition(s): This address should correspond to an employees
+
+        Revoke EMPLOYEE_ROLE
+        Remove APPROVAL to transfer OWNER's NFTs
+
+    3) ADD CUSTOMER 
+        Parameter(s): address, driver_experience
+        Condition(s): 
+            This customer should not already exist
+            driver_experience should be acceptable (0 < driver_experience < 80)
+
+        Create the customer in the SC
+        Grant CUSTOMER_ROLE
+
+    4) REMOVE CUSTOMER 
+        Parameter(s): address
+        Condition(s): This address should correspond to a customer
+
+        Delete the customer in the SC
+        Revoke CUSTOMER_ROLE
+    
+
+/* ---------------------------------------------
+                MINTER_ROLE
+ -------------------------------------------- */
+    1) CREATE (MINT) A CAR
+        Parameter(s): 
+            model 
+            color
+            matriculation_year 
+            retail_value
+            ipfs_link
+        Condition(s): This car should not already exist (same attributes)
+
+        Create the car in the Smart Contract (SC)
+        Mint this car as an NFT to the owner address
+
+    2) REMOVE (BURN) A CAR
+        Parameter(s): carId
+        Condition(s): This car should be available (no Agreement)
+
+        Remove the car in the SC
+        Burn the NFT 
+
+/* ---------------------------------------------
+                EMPLOYEE_ROLE
+ -------------------------------------------- */
+
+    1) ACCEPT LEASING PROPOSITION
+        Parameter(s): leasingPropositionId
+        Condition(s): 
+            The leasing proposition should exist
+            The car should be available (no "current" or "terminate" Agreement)
+            The CUSTOMER must not have a current Agreement
+
+        Create an Agreement between the EMPLOYEE and the CUSTOMER
+        ($) Transfer the first monthly quota to the OWNER's address
+        Keep the deposit
+        Delete the leasing proposition
+    
+    2) REJECT LEASING PROPOSITION
+        Parameter(s): leasingPropositionId
+        Condition(s): The leasing proposition shoudl exist
+
+        ($) Refund the CUSTOMER (deposit + first monthly quota)
+        Delete the leasing proposition
+
+    3) CANCEL AN AGREEMENT 
+        Parameter(s): AgreementId
+        Condition(s): 
+            The Agreement should exist
+            The Agreement should be "current" state
+            The CUSTOMER must have not pay for more than 3 months
+
+        ($) Transfer the deposit to the OWNER's address
+        Set the state of the contract to "cancelled"
+
+    4) SET CAR'S MILEAGE (after a cancelled Agreement)
+        Parameter(s): carId, mileage
+        Condition(s): mileage should be more than the current one
+
+        Set the car mileage
+
+    5) ACCEPT BUYING PROPOSITION
+        Parameter(s): buyingPropositionId
+        Condition(s): 
+            The buying proposition should exist
+            The NFT still belong to the OWNER
+
+        Transfer the NFT to the customer
+        ($) Transfer the amount to the OWNER's address
+        Delete the leasing proposition
+    
+    6) REJECT BUYING PROPOSITION
+        Parameter(s): buyingPropositionId
+        Condition(s): The buying proposition shoudl exist
+
+        ($) Refund the amount to the customer (50% of the car's retail price)
+        Delete the buying proposition
+
+/* ---------------------------------------------
+                CUSTOMER_ROLE
+ -------------------------------------------- */
+
+    1) MAKE LEASE PROPOSITION
+        Parameter(s): carId, duration (index), mileageCap (index)
+        Condition(s): 
+            The car should be available (no "current" or "terminate" Agreement)
+            The duration/mileageCap indexes must be acceptable (0 < i < 5)
+            The amount should be enough (deposit + first month)
+
+        Create a new lease proposition in the SC
+        ($) Lock the amount in the SC's address
+
+    2) CANCEL LEASE PROPOSITION
+        Parameter(s): leasePropositionId
+        Condition(s): 
+            The lease proposition shoudl exist
+            The customer must have done this proposition
+
+        ($) Refund the customer (deposit + first month)
+        Delete the proposition
+
+    3) CANCEL AGREEMENT ???
+
+    4) PAY RENT
+        Parameter(s): agreementId, mileage
+        Condition(s): 
+            The customer should be the tenant of the Agreement
+            The Agreement must be "current" (not "terminate" or "cancelled")
+            The current time is after the due date for the payment
+            The due date for the next payment is before the end date of the Agreement (Agreement not finished)
+            The mileage is over the current one
+            The amount is enough (1, 2 or 3 month + mileageCap fees)
+
+        ($) Send the amount to the OWNER's address
+        Update the due date for the next payment
+        If one year as passed:
+            Update next mileageCap reset date
+        Update the mileage of the car
+
+    5) TERMINATE LEASE
+        Parameter(s): agreementId
+        Condition(s): 
+            The customer should be the tenant of the Agreement
+            The Agreement must be "current" (not "terminate" or "cancelled")
+            The due date for the next payment is after the end date of the Agreement (Agreement finished)
+
+        Change the state of the Agreement to "terminate"
+        ($) Send the deposit back to the customer
+
+    6) BUY CAR PROPOSITION
+        Parameter(s): agreementId
+        Condition(s): 
+            The customer should be the tenant of the Agreement
+            The Agreement must be "current" (not "terminate" or "cancelled")
+            The due date for the next payment is after the end date of the Agreement (Agreement finished)
+            The amount should be enough (50% of car retail price - deposit)
+
+        Create a buy proposition in the SC
+        ($) Lock the amount in the SC's address
+
+    7) EXTEND LEASE
+
+    
